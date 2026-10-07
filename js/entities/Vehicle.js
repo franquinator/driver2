@@ -44,6 +44,7 @@ export class Vehicle {
 
         this.mesh = new THREE.Group();
         this.wheelPivots = [];
+        this._spawn = { x: spawn.x, z: spawn.z, yaw: spawn.yaw ?? 0 };
         this._buildVehicleMesh();
         this._createPhysicsBody(spawn);
         this.syncMesh();
@@ -342,6 +343,21 @@ export class Vehicle {
         this.body.setLinvel({ x: 0, y: 0, z: 0 }, true);
         this.body.setAngvel({ x: 0, y: 0, z: 0 }, true);
         this.steering = 0;
+        this.syncMesh();
+    }
+
+    /**
+     * Reinicia por completo: vuelve al punto de inicio, velocidad cero y daño a 0.
+     */
+    resetToSpawn() {
+        this.damage = 0;
+        this.steerPullSign = 0;
+        this.bodyMaterial.color.copy(this.baseColor);
+        this.reset(this._spawn.x, this._spawn.z);
+
+        // Recuperar la orientación original de aparición
+        _quat.setFromAxisAngle(new THREE.Vector3(0, 1, 0), this._spawn.yaw);
+        this.body.setRotation({ x: _quat.x, y: _quat.y, z: _quat.z, w: _quat.w }, true);
         this.syncMesh();
     }
 

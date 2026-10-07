@@ -10,7 +10,7 @@ Servir la carpeta con Live Server o, si tienes Python, ejecutar `python -m http.
 
 - WASD o flechas: acelerar, frenar / marcha atrás y girar.
 - Espacio: freno de mano (bloquea las ruedas traseras para derrapar).
-- R: enderezar el vehículo en el cruce más cercano (no repara el daño).
+- R: reiniciar el vehículo (vuelve al punto de inicio, velocidad cero y daño a 0).
 - 1–4: cambiar de vehículo (muscle car, patrulla, camión, autobús).
 
 ## Estructura

@@ -123,7 +123,7 @@ export class Engine {
             const spot = this.city.getNearestIntersection(pos.x, pos.z);
 
             if (action.type === 'reset') {
-                this.vehicle.reset(spot.x, spot.z);
+                this.vehicle.resetToSpawn();
             } else if (action.type === 'selectVehicle') {
                 const key = CONFIG.VEHICLE_ORDER[action.index];
                 if (key && key !== this.vehicleKey) {
