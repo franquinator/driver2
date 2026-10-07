@@ -1,0 +1,96 @@
+Aquí tienes el plan de desarrollo estructurado paso a paso en listas de tareas con sus respectivos prompts.Para ejecutar este proyecto sin Node.js ni instalaciones, se utilizarán ES Modules cargando Three.js directamente desde CDN (unpkg o cdnjs), de modo que solo necesites abrir index.html en tu navegador (o usar un servidor local básico como Live Server en VS Code para evitar restricciones de CORS con módulos).Tarea 1: Estructura de archivos y configuración inicialObjetivo: Crear la estructura de carpetas, el HTML principal que carga Three.js por CDN y el archivo de configuración global.Prompt para Tarea 1:PlaintextCrea los primeros dos archivos para el juego en Three.js con la siguiente estructura de carpetas:
+driver2-threejs/
+├── index.html
+└── js/
+    └── config.js
+
+Requisitos:
+1. `index.html`:
+   - Configura el HTML5 estándar con viewport responsivo y estilos CSS inline para eliminar márgenes (`margin: 0`, `overflow: hidden`).
+   - Usa `importmap` dentro del `<head>` para cargar Three.js (r128 o superior) desde CDN de unpkg/cdnjs.
+   - Importa `./js/main.js` como un módulo (`type="module"`).
+   - Incluye un contenedor DIV simple para la interfaz del juego (velocímetro, estado).
+
+2. `js/config.js`:
+   - Exporta un objeto de configuración constante (`CONFIG`) con valores globales:
+     - `CANVAS_ID`, tamaño de ventana.
+     - Ajustes del vehículo: velocidad máxima, aceleración, frenado, fricción, radio de giro.
+     - Ajustes de cámara: offset (distancia y altura respecto al auto), FOV, suavizado (lerp factor).
+     - Ajustes de la ciudad: tamaño de bloques, ancho de calles, grid (ej. 10x10).
+Tarea 2: Módulo del Motor de Física BásicoObjetivo: Implementar la lógica matemática y física simplificada en 3D para el movimiento del vehículo (sin librerías externas de física).Prompt para Tarea 2:PlaintextEscribe el módulo `js/utils/Physics.js`.
+
+Requisitos:
+1. Exporta métodos auxiliares para física de vehículos simplificada en 3D:
+   - `updateVehiclePhysics(vehicleState, inputState, deltaTime, config)`:
+     - Calcula la aceleración/frenado basándose en las entradas de movimiento.
+     - Aplica fricción y resistencia del aire.
+     - Actualiza la velocidad actual y la dirección de rotación (yaw/ángulo Y).
+     - Calcula el nuevo vector de posición en X y Z.
+   - `checkCollision(box1, box2)`: Detección básica de colisiones AABB (Axis-Aligned Bounding Box) para verificar choque del vehículo contra los edificios de la ciudad.
+2. Todo debe usar clases o vectores propios de Three.js (`THREE.Vector3`, `THREE.Box3`).
+Tarea 3: Manejo de Entradas del UsuarioObjetivo: Capturar los controles del teclado para manejar el vehículo.Prompt para Tarea 3:PlaintextEscribe el archivo `js/core/InputHandler.js`.
+
+Requisitos:
+1. Crea la clase `InputHandler` que escuche los eventos `keydown` y `keyup`.
+2. Mantiene el estado de las teclas de dirección:
+   - Avanzar: `KeyW` o `ArrowUp`
+   - Retroceder/Reversa: `KeyS` or `ArrowDown`
+   - Girar Izquierda: `KeyA` o `ArrowLeft`
+   - Girar Derecha: `KeyD` o `ArrowRight`
+   - Freno de mano: `Space`
+3. Incluye métodos para consultar el estado actual de los inputs y limpiar eventos al destruirse.
+Tarea 4: Sistema de Cámara Persecución (Chase Cam)Objetivo: Crear una cámara en tercera persona que siga al vehículo suavemente al estilo Driver 2.Prompt para Tarea 4:PlaintextEscribe el archivo `js/core/Camera.js`.
+
+Requisitos:
+1. Exporta la clase `CameraManager`.
+2. Inicializa una `THREE.PerspectiveCamera`.
+3. Implementa un método `update(targetPosition, targetRotation, deltaTime)`:
+   - Calcula la posición deseada de la cámara detrás y por encima del objetivo usando el offset de `CONFIG`.
+   - Aplica interpolación lineal (`Vector3.lerp`) para un seguimiento suave de la posición.
+   - Usa `camera.lookAt()` orientado hacia el vehículo o ligeramente hacia el frente de este.
+4. Incluye un método `onWindowResize(width, height)` para actualizar el aspect ratio.
+Tarea 5: Creación del Vehículo en 3DObjetivo: Modelar un auto retro usando geometrías básicas de Three.js y asignarle la física de la Tarea 2.Prompt para Tarea 5:PlaintextEscribe el archivo `js/entities/Vehicle.js`.
+
+Requisitos:
+1. Exporta la clase `Vehicle`.
+2. Construye mediante código (sin archivos .gltf externos por ahora) un vehículo estilo auto clásico de los 70 (Driver 2):
+   - Chasis/Carrocería principal (`THREE.BoxGeometry`).
+   - Techo/Cabina (`THREE.BoxGeometry`).
+   - 4 ruedas (`THREE.CylinderGeometry`) ubicadas en las esquinas.
+   - Luces delanteras y traseras simples con materiales de colores brillante/emisivo.
+3. Agrupa todo en un `THREE.Group`.
+4. Incluye un método `update(inputState, deltaTime, cityColliders)` que use `Physics.js` para mover el auto y verificar colisiones con la ciudad.
+5. Exporta la posición y la caja de colisión AABB para uso de la cámara y del motor.
+Tarea 6: Generación de la CiudadObjetivo: Crear un mapa urbano procedimental con calles, manzanas y edificios al estilo retro.Prompt para Tarea 6:PlaintextEscribe el archivo `js/entities/City.js`.
+
+Requisitos:
+1. Exporta la clase `City`.
+2. Debe generar procedimentalmente una cuadrícula urbana (ej. 10x10 bloques) basada en `CONFIG`:
+   - Un plano de suelo grande para el asfalto/carretera.
+   - Edificios con distintas alturas, anchos y colores de materiales (`THREE.BoxGeometry`).
+   - Aceras/banquetas delimitando las manzanas.
+3. Optimización: Usa `InstancedMesh` o junta las geometrías (`BufferGeometryUtils` si aplica, o reutiliza materiales) para asegurar que la ciudad renderice de forma eficiente.
+4. Exporta un array `colliders` con los `THREE.Box3` de todos los edificios para la detección de colisiones del vehículo.
+Tarea 7: Bucle Principal del Juego (Engine)Objetivo: Integrar la escena, las luces, el renderer, las entidades y el loop de animación.Prompt para Tarea 7:PlaintextEscribe el archivo `js/core/Engine.js`.
+
+Requisitos:
+1. Exporta la clase `Engine`.
+2. Inicializa:
+   - `THREE.WebGLRenderer` adjuntado al DOM.
+   - `THREE.Scene` con color de fondo tipo cielo/niebla (`scene.fog = new THREE.Fog(...)`).
+   - Iluminación: `THREE.DirectionalLight` (con sombras activadas si es posible) y `THREE.AmbientLight`.
+   - Instancias de `CameraManager`, `InputHandler`, `City` y `Vehicle`.
+3. Implementa el bucle de renderizado `animate(timestamp)`:
+   - Calcula el `deltaTime` (usando `THREE.Clock`).
+   - Actualiza la física del `Vehicle` pasando los inputs y los colliders de la `City`.
+   - Actualiza la posición de la `CameraManager` siguiendo al `Vehicle`.
+   - Renderiza la escena.
+4. Agrega el listener para ajustar la pantalla al cambiar el tamaño de la ventana (`resize`).
+Tarea 8: Punto de Entrada Principal e Interfaz BásicaObjetivo: Inicializar la aplicación al cargar la página y conectar la interfaz HTML con el motor.Prompt para Tarea 8:PlaintextEscribe el archivo `js/main.js`.
+
+Requisitos:
+1. Importa `Engine` desde `./core/Engine.js`.
+2. Agrega un listener para `DOMContentLoaded` o inicio directo del módulo.
+3. Instancia y arranca el motor (`const engine = new Engine(); engine.start();`).
+4. Añade una pequeña actualización en el DOM (o dentro del loop) para mostrar la velocidad actual del vehículo en km/h en la esquina superior de la pantalla.
+Resumen del flujo de trabajo1.Paso 1: Tareas 1 y 2:Estructura base y física.Genera index.html, config.js y Physics.js. Asegúrate de tener cargado Three.js mediante CDN.2.Paso 2: Tareas 3 y 4:Control y vista.Genera InputHandler.js y Camera.js para controlar teclado y seguimiento en 3ª persona.3.Paso 3: Tareas 5 y 6:Entidades 3D.Crea Vehicle.js (auto en 3D) y City.js (ciudad cuadricular con colisionadores).4.Paso 4: Tareas 7 y 8:Integración.Implementa Engine.js y main.js para unir todo en el bucle principal y ejecutar el juego.

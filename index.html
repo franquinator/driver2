@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Driver 2 - Three.js</title>
+    <link rel="stylesheet" href="./css/style.css">
+
+    <!-- Three.js y Rapier desde CDN, sin dependencias locales -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+                "@dimforge/rapier3d-compat": "https://cdn.jsdelivr.net/npm/@dimforge/rapier3d-compat@0.21.0/dist/rapier.mjs"
+            }
+        }
+    </script>
+</head>
+<body>
+
+    <!-- Interfaz de usuario (HUD) -->
+    <div id="game-ui">
+        <div class="hud-panel">
+            <div id="vehicle-name" class="vehicle-name"></div>
+            <div class="speed-label"><span id="speed-value">0</span> KM/H</div>
+            <div class="damage-label">DAÑO</div>
+            <div class="damage-bar"><div id="damage-fill" class="damage-fill"></div></div>
+        </div>
+    </div>
+
+    <!-- Punto de entrada JS -->
+    <script type="module" src="./js/main.js"></script>
+
+</body>
+</html>
