@@ -6,6 +6,7 @@ import { Vehicle } from '../entities/Vehicle.js';
 import { City } from '../entities/City.js';
 import { Physics } from '../utils/Physics.js';
 import { AudioEngine } from '../utils/AudioEngine.js';
+import { SettingsPanel } from './SettingsPanel.js';
 
 /**
  * Motor principal del juego. Coordina la escena, renderizador, física, entidades y loop.
@@ -29,6 +30,13 @@ export class Engine {
         this.isRunning = false;
 
         this.audioEngine = AudioEngine.getInstance();
+        this.settingsPanel = new SettingsPanel({
+            onChange: (path, value) => this._onConfigChange(path, value),
+            getValue: (path) => this._getConfigValue(path),
+            onReset: () => this._resetConfig(),
+        });
+        this._defaultConfig = JSON.parse(JSON.stringify(CONFIG));
+        this._loadConfig();
 
         this._initRenderer();
         this._initScene();
@@ -172,6 +180,104 @@ export class Engine {
      */
     _onFirstInteraction() {
         this.audioEngine.resume();
+    }
+
+    /**
+     * Aplica un cambio de configuración recibido del panel y persiste el estado.
+     * @param {string} path Ruta de configuración (p. ej. 'AUDIO.MASTER_VOLUME').
+     * @param {number|boolean} value Nuevo valor.
+     */
+    _onConfigChange(path, value) {
+        this._setConfigValue(path, value);
+        this._saveConfig();
+
+        const top = path.split('.')[0];
+        if (top === 'AUDIO') {
+            if (path === 'AUDIO.MASTER_VOLUME') this.audioEngine.updateMasterVolume(value);
+            else if (path === 'AUDIO.ENABLED') this.audioEngine.setEnabled(value);
+        }
+        if (top === 'PHYSICS') {
+            try {
+                this.physics.world.gravity = { x: 0, y: value, z: 0 };
+            } catch (e) { /* el mundo ya está inicializado */ }
+        }
+    }
+
+    /**
+     * Escribe un valor en una ruta anidada del objeto CONFIG.
+     * @param {string} path Ruta (p. ej. 'VEHICLES.MUSCLE.MASS').
+     * @param {*} value Valor a asignar.
+     */
+    _setConfigValue(path, value) {
+        const keys = path.split('.');
+        let cur = CONFIG;
+        for (let i = 0; i < keys.length - 1; i++) {
+            const k = keys[i];
+            if (typeof cur[k] !== 'object' || cur[k] === null) cur[k] = {};
+            cur = cur[k];
+        }
+        cur[keys[keys.length - 1]] = value;
+    }
+
+    /**
+     * Lee un valor desde una ruta anidada del objeto CONFIG.
+     * @param {string} path Ruta (p. ej. 'AUDIO.ENGINE.IDLE_RPM').
+     * @returns {*}
+     */
+    _getConfigValue(path) {
+        const keys = path.split('.');
+        let cur = CONFIG;
+        for (const k of keys) {
+            if (cur === null || cur === undefined) return undefined;
+            cur = cur[k];
+        }
+        return cur;
+    }
+
+    /**
+     * Guarda la configuración actual en localStorage.
+     */
+    _saveConfig() {
+        try { localStorage.setItem('driver2.config', JSON.stringify(CONFIG)); } catch (e) { /* noop */ }
+    }
+
+    /**
+     * Carga la configuración guardada (si existe) sobre los valores por defecto.
+     */
+    _loadConfig() {
+        try {
+            const raw = localStorage.getItem('driver2.config');
+            if (!raw) return;
+            const stored = JSON.parse(raw);
+            this._deepMerge(CONFIG, stored);
+        } catch (e) { /* sin configuracion guardada */ }
+    }
+
+    _resetConfig() {
+        const defaults = this._defaultConfig;
+        for (const key of Object.keys(defaults)) {
+            CONFIG[key] = JSON.parse(JSON.stringify(defaults[key]));
+        }
+        try { localStorage.removeItem('driver2.config'); } catch (e) { /* noop */ }
+        this._saveConfig();
+        if (this.settingsPanel) this.settingsPanel._render();
+    }
+
+    /**
+     * Fusiona un objeto fuente en el destino (solo objetos anidados).
+     * @param {Object} target
+     * @param {Object} source
+     */
+    _deepMerge(target, source) {
+        for (const key of Object.keys(source)) {
+            const sv = source[key];
+            const tv = target[key];
+            if (sv && typeof sv === 'object' && !Array.isArray(sv) && tv && typeof tv === 'object' && !Array.isArray(tv)) {
+                this._deepMerge(tv, sv);
+            } else {
+                target[key] = sv;
+            }
+        }
     }
 
     /**

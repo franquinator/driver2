@@ -50,6 +50,24 @@ export class AudioEngine {
     }
 
     /**
+     * Actualiza el volumen maestro (0..1).
+     * @param {number} value
+     */
+    updateMasterVolume(value) {
+        if (this.masterGain && this.ctx) {
+            this.masterGain.gain.setTargetAtTime(value, this.ctx.currentTime, 0.02);
+        }
+    }
+
+    /**
+     * Activa/desactiva todos los sonidos.
+     * @param {boolean} enabled
+     */
+    setEnabled(enabled) {
+        this.enabled = !!enabled;
+    }
+
+    /**
      * Arranca el grafo de sonido del motor (osciladores + filtro + ganancia).
      */
     startEngineSound() {

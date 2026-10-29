@@ -16,6 +16,7 @@ Prototipo de juego de conducción 3D ("Driver 2") en JS vanilla + Three.js + Rap
 - `Vehicle` = chasis dinámico + `DynamicRayCastVehicleController`, ruedas 0-1 delanteras (dirección), 2-3 traseras (tracción, freno de mano). La malla se sincroniza desde la física en `syncMesh()`.
 - Toda la configuración está en `js/config.js`: perfiles en `CONFIG.VEHICLES` (orden de teclas 1–4 en `VEHICLE_ORDER`), `DAMAGE`, `CONTROLS`, `PHYSICS`, `AUDIO`. La carpeta `js/config/` está vacía y no se usa.
 - El HUD (`#speed-value`, `#vehicle-name`, `#damage-fill`) se actualiza en `main.js` con `setInterval` a 30 FPS, no en el loop del motor.
+- `SettingsPanel` (`js/core/SettingsPanel.js`) genera categorías y campos desde las rutas dentro de `CONFIG` (números y booleans; label desde la ruta). Cambios → `Engine._onConfigChange()` (deep set + localStorage + hot apply). El panel se abre/cierra con botón flotante y panel deslizante; el botón `RESET` → `Engine._resetConfig()` restaura defaults y limpia el `localStorage`.
 
 ## Gotchas
 - Ejes: +Z adelante, +Y arriba, +X a la izquierda. `getYaw() = 0` mira a +Z; girar a la izquierda suma yaw. `CAMERA.OFFSET.Z` es negativo (detrás).

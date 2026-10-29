@@ -32,3 +32,11 @@ Los parámetros (volumen maestro, régimen/ganancia/frecuencias del motor y de c
 
 - El audio se crea al iniciar el juego y se reanuda tras la primera interacción del usuario (política de autoplay de los navegadores).
 - Si no se oye el motor o los choques, revisar el volumen maestro (`CONFIG.AUDIO.MASTER_VOLUME`) y el volumen del sistema.
+
+## Panel de configuración
+
+- Botón flotante `CONFIG` (esquina superior derecha) abre/cierra un panel deslizante desde la derecha.
+- El panel lista categorías (Audio, Física, Daño, Cámara, Vehículos); varias pueden estar abiertas a la vez y cada una con sus subcategorías (p. ej. por coche).
+- Los campos se generan desde las rutas dentro de `CONFIG` (números con input libre, booleans con checkbox); el label se infiere desde la ruta.
+- Los cambios se aplican al instante y se persisten en `localStorage` (`driver2.config`); al iniciar el juego se cargan los guardados.
+- El botón `RESET` del panel restaura los valores por defecto (sobrescribe `CONFIG` con los defaults, borra los cambios guardados y re-renderiza los campos).
