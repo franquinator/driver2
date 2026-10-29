@@ -10,10 +10,11 @@ Prototipo de juego de conducción 3D ("Driver 2") en JS vanilla + Three.js + Rap
 ## Wiring
 - El `importmap` de `index.html` fija `three@0.160.0` (`three` y `three/addons/`) y `@dimforge/rapier3d-compat@0.21.0` (`dist/rapier.mjs`, WASM incluido). Importa siempre por esos nombres.
 - Rapier es asíncrono: `main.js` hace `await Engine.create()`, que llama a `Physics.init()` antes de crear nada físico.
+- `AudioEngine` (`js/utils/AudioEngine.js`) genera proceduralmente (Web Audio API) el sonido del motor (osciladores + filtro paso-bajo modulados por RPM) y los choques (ruido + subgraveso); el motor se actualiza desde `_updateEngineSound()` en el bucle y los choques desde `_onContactForce()`. El contexto se reanuda en `_onFirstInteraction()`.
 - `Physics` (`js/utils/Physics.js`) envuelve el `RAPIER.World` con paso fijo (`CONFIG.PHYSICS.TIMESTEP`) y acumulador. Por cada paso: callback de controles del vehículo → `world.step(eventQueue)` → eventos de fuerza de contacto (daño).
 - `City` mete todos los colisionadores estáticos (suelo, aceras, edificios, muros de borde invisibles) en un único cuerpo fijo.
 - `Vehicle` = chasis dinámico + `DynamicRayCastVehicleController`, ruedas 0-1 delanteras (dirección), 2-3 traseras (tracción, freno de mano). La malla se sincroniza desde la física en `syncMesh()`.
-- Toda la configuración está en `js/config.js`: perfiles en `CONFIG.VEHICLES` (orden de teclas 1–4 en `VEHICLE_ORDER`), `DAMAGE`, `CONTROLS`, `PHYSICS`. La carpeta `js/config/` está vacía y no se usa.
+- Toda la configuración está en `js/config.js`: perfiles en `CONFIG.VEHICLES` (orden de teclas 1–4 en `VEHICLE_ORDER`), `DAMAGE`, `CONTROLS`, `PHYSICS`, `AUDIO`. La carpeta `js/config/` está vacía y no se usa.
 - El HUD (`#speed-value`, `#vehicle-name`, `#damage-fill`) se actualiza en `main.js` con `setInterval` a 30 FPS, no en el loop del motor.
 
 ## Gotchas

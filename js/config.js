@@ -184,6 +184,26 @@ export const CONFIG = {
         }
     },
 
+    // Ajustes de Audio (generación procedural con Web Audio API)
+    AUDIO: {
+        MASTER_VOLUME: 0.8,      // Volumen maestro
+        ENABLED: true,            // Activa/desactiva todos los sonidos
+        ENGINE: {
+            IDLE_RPM: 0.15,      // Régimen relativo del motor (0..1) en ralentí
+            IDLE_GAIN: 0.12,      // Ganancia de audio del motor en ralentí
+            IDLE_HZ: 12,          // Frecuencia base del motor (Hz) en ralentí
+            MAX_HZ: 90,           // Frecuencia máxima del motor (Hz) a plena carga
+            LOWPASS_IDLE: 250,   // Corte del filtro paso-bajo en ralentí (Hz)
+            LOWPASS_MAX: 2000,   // Corte del filtro en el motor al máximo (Hz)
+        },
+        CRASH: {
+            VOLUME: 0.9,          // Volumen base del choque
+            MAX_VELOCITY: 15,     // Velocidad de impacto (m/s) que equivale a un choque máximo
+            NOISE_LOWPASS: 600,   // Corte del ruido de choque (Hz)
+            THUD_HZ: 90           // Frecuencia del subgraveso del golpe (Hz)
+        }
+    },
+
     // Ajustes de Cámara Persecución (Chase Cam)
     CAMERA: {
         FOV: 60,

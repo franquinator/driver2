@@ -5,6 +5,7 @@ import { InputHandler } from './InputHandler.js';
 import { Vehicle } from '../entities/Vehicle.js';
 import { City } from '../entities/City.js';
 import { Physics } from '../utils/Physics.js';
+import { AudioEngine } from '../utils/AudioEngine.js';
 
 /**
  * Motor principal del juego. Coordina la escena, renderizador, física, entidades y loop.
@@ -17,12 +18,17 @@ export class Engine {
      */
     static async create() {
         await Physics.init();
-        return new Engine();
+        const engine = new Engine();
+        await engine.audioEngine.init();
+        engine.audioEngine.startEngineSound();
+        return engine;
     }
 
     constructor() {
         this.clock = new THREE.Clock();
         this.isRunning = false;
+
+        this.audioEngine = AudioEngine.getInstance();
 
         this._initRenderer();
         this._initScene();
@@ -111,6 +117,7 @@ export class Engine {
         this.vehicle = new Vehicle(preset, this.physics, CONFIG.DAMAGE, spawn);
         this.scene.add(this.vehicle.mesh);
         this.cameraManager.setScale(preset.CAMERA_SCALE);
+        this.audioEngine.startEngineSound();
     }
 
     /**
@@ -144,6 +151,9 @@ export class Engine {
         // Cambio de velocidad aproximado en este paso: F·dt / m
         const deltaV = (event.totalForceMagnitude() * dt) / this.vehicle.config.MASS;
         this.vehicle.applyImpact(deltaV);
+
+        // Choque: reproducir sonido procedural según la fuerza del impacto
+        this.audioEngine.playCrash(deltaV);
     }
 
     /**
@@ -152,6 +162,16 @@ export class Engine {
      */
     _initListeners() {
         window.addEventListener('resize', this._onWindowResize.bind(this));
+        window.addEventListener('keydown', this._onFirstInteraction.bind(this));
+        window.addEventListener('pointerdown', this._onFirstInteraction.bind(this));
+    }
+
+    /**
+     * Reanuda el audio tras una interacción del usuario (política de autoplay).
+     * @private
+     */
+    _onFirstInteraction() {
+        this.audioEngine.resume();
     }
 
     /**
@@ -180,6 +200,9 @@ export class Engine {
      * Detiene el bucle.
      */
     stop() {
+        if (this.isRunning) {
+            this.audioEngine.stopEngineSound();
+        }
         this.isRunning = false;
         this.renderer.setAnimationLoop(null);
     }
@@ -208,7 +231,24 @@ export class Engine {
         // 4. Actualizar la cámara de persecución
         this.cameraManager.update(this.vehicle.position, this.vehicle.getYaw(), deltaTime);
 
-        // 5. Renderizar
+        // 5. Actualizar el sonido procedural del motor
+        this._updateEngineSound();
+
+        // 6. Renderizar
         this.renderer.render(this.scene, this.cameraManager.getCamera());
+    }
+
+    /**
+     * Sincroniza el sonido del motor con el régimen y el acelerador del vehículo.
+     * @private
+     */
+    _updateEngineSound() {
+        const vehicle = this.vehicle;
+        if (!vehicle) return;
+
+        this.audioEngine.setEngine(
+            vehicle.getEngineRpm01(),
+            vehicle.getEngineThrottle01()
+        );
     }
 }

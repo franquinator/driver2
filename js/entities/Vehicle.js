@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import RAPIER from '@dimforge/rapier3d-compat';
+import { CONFIG } from '../config.js';
 
 // Índices de las ruedas
 const FRONT_LEFT = 0;
@@ -38,6 +39,10 @@ export class Vehicle {
         this.steering = 0;
         this.damage = 0;            // 0..100 %
         this.steerPullSign = 0;     // Lado al que tira la dirección dañada
+
+        // Estado del sonido del motor (régimen y pedal del acelerador, 0..1)
+        this._engineRpm01 = CONFIG.AUDIO.ENGINE.IDLE_RPM;
+        this._throttle01 = 0;
 
         // Posición en Three.js (la usa la cámara)
         this.position = new THREE.Vector3();
@@ -248,6 +253,13 @@ export class Vehicle {
             brakeDecel = c.ROLLING_DECEL; // Resistencia a la rodadura
         }
 
+        // Estado del sonido del motor: régimen (rpm 0..1) y pedal del acelerador (0..1)
+        const accelerating = (input.forward && !input.backward) || (input.backward && !input.forward);
+        this._engineRpm01 = accelerating && engine !== 0
+            ? Math.min(Math.abs(engine) / (c.ENGINE_FORCE * engineMul), 1) * (input.backward ? 0.3 : 1)
+            : CONFIG.AUDIO.ENGINE.IDLE_RPM;
+        this._throttle01 = input.forward ? 1 : (input.backward ? 0.35 : 0);
+
         // Impulso de freno por rueda para conseguir la deceleración deseada
         const brakeImpulse = (decel, wheels) => (c.MASS * decel * dt) / wheels;
 
@@ -353,6 +365,8 @@ export class Vehicle {
         this.damage = 0;
         this.steerPullSign = 0;
         this.bodyMaterial.color.copy(this.baseColor);
+        this._engineRpm01 = CONFIG.AUDIO.ENGINE.IDLE_RPM;
+        this._throttle01 = 0;
         this.reset(this._spawn.x, this._spawn.z);
 
         // Recuperar la orientación original de aparición
@@ -384,5 +398,21 @@ export class Vehicle {
      */
     getSpeedKmH() {
         return Math.round(Math.abs(this.controller.currentVehicleSpeed()) * 3.6);
+    }
+
+    /**
+     * Régimen del motor (0..1) para el sonido procedural. 0 = ralentí, 1 = plena carga.
+     * @returns {number}
+     */
+    getEngineRpm01() {
+        return this._engineRpm01;
+    }
+
+    /**
+     * Pedal del acelerador (0..1) para el sonido procedural.
+     * @returns {number}
+     */
+    getEngineThrottle01() {
+        return this._throttle01;
     }
 }
