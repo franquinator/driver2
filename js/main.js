@@ -3,6 +3,7 @@ import { Engine } from './core/Engine.js';
 document.addEventListener('DOMContentLoaded', async () => {
     // 1. Inicializar Rapier, crear y arrancar el motor del juego
     const engine = await Engine.create();
+    window.engine = engine;
     engine.start();
 
     // 2. Referencias a los elementos del HUD

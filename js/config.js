@@ -228,5 +228,25 @@ export const CONFIG = {
             0x8c7c6d, 0xa39281, 0x5c626d, 0x7a8393, 0x9e8a78
         ],
         BOUNDARY_WALL_HEIGHT: 6 // Muros invisibles en el borde del mapa
+    },
+
+    // Configuración de tráfico
+    TRAFFIC: {
+        MAX_VEHICLES: 5,               // Número máximo de vehículos simultáneos
+        SPAWN_RATE: 2.0,               // Tiempo entre spawneos (segundos)
+        DESPAWN_DISTANCE: 100,         // Distancia del centro para remover vehículos
+        AI_DECISION_TIME: { MIN: 3, MAX: 6 }, // Tiempo mínimo/ máximo en intersección (segundos)
+        INTERSECTION_WAIT_TIME: { MIN: 2, MAX: 4 }, // Tiempo mínimo detenido en cruce
+    },
+
+    // Configuración de semáforos
+    TRAFFIC_LIGHTS: {
+        ENABLED: true,
+        SPAWN_PROBABILITY: 0.4,        // % de intersecciones con semáforo (0-1)
+        GREEN_DURATION: 5.0,           // Segundos en verde
+        YELLOW_DURATION: 3.0,          // Segundos en amarillo
+        RED_DURATION: 5.0,             // Segundos en rojo
+        RED_YELLOW_DURATION: 1.0,      // Segundos en rojo+yellow juntos
+        MIN_DISTANCE_TO_STOP: 5.0,     // Metros antes de detenerse en rojo
     }
 };

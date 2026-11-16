@@ -6,6 +6,7 @@ import { Vehicle } from '../entities/Vehicle.js';
 import { City } from '../entities/City.js';
 import { Physics } from '../utils/Physics.js';
 import { AudioEngine } from '../utils/AudioEngine.js';
+import { TrafficSpawner } from '../utils/TrafficSpawner.js';
 import { SettingsPanel } from './SettingsPanel.js';
 
 /**
@@ -42,6 +43,10 @@ export class Engine {
         this._initScene();
         this._initEntities();
         this._initListeners();
+
+        // Inicializar sistema de tráfico
+        this.trafficSpawner = new TrafficSpawner(this.physics, this.city, this.scene);
+        this.trafficSpawner.init();
     }
 
     /**
@@ -331,16 +336,21 @@ export class Engine {
             (event, dt) => this._onContactForce(event, dt)
         );
 
-        // 3. Sincronizar mallas con la física
-        this.vehicle.syncMesh();
+        // 3. Actualizar sistema de tráfico AI y semáforos
+        this.trafficSpawner.update(deltaTime, this.city);
+        this.trafficSpawner.updateLights(deltaTime);
 
-        // 4. Actualizar la cámara de persecución
+        // 4. Sincronizar mallas con la física (vehículo + tráfico)
+        this.vehicle.syncMesh();
+        this.trafficSpawner.syncAllMeshes();
+
+        // 5. Actualizar la cámara de persecución
         this.cameraManager.update(this.vehicle.position, this.vehicle.getYaw(), deltaTime);
 
-        // 5. Actualizar el sonido procedural del motor
+        // 6. Actualizar el sonido procedural del motor
         this._updateEngineSound();
 
-        // 6. Renderizar
+        // 7. Renderizar
         this.renderer.render(this.scene, this.cameraManager.getCamera());
     }
 
